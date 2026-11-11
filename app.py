@@ -124,6 +124,138 @@ section[data-testid="stSidebar"] hr { border-color:rgba(255,255,255,.18); }
 .insight {border:1px solid #e2eef1;border-left:4px solid #04aa92;border-radius:13px;background:#fff;padding:15px 17px;line-height:1.65;color:#435a69;margin:8px 0 16px;}
 @media(max-width:760px){.hero .hero-copy{max-width:100%}.hero .ride-visual{opacity:.14;right:-28px;top:15px}.animated-road .ride-visual{opacity:.25;right:-70px}.animated-road p{max-width:100%}.public-h1{font-size:2.35rem}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important;transform:none !important;scroll-behavior:auto !important;}}
+
+/* -------------------------------------------------------------
+   ZimiFare Pro · accessibility and visibility patch · Nov 2026
+   Contrast: primary button #006e62 / white = 6.16:1.
+   Headings are deliberately explicit because modern Streamlit's
+   own Markdown selectors can override plain h2/h3 selectors.
+   This patch is visual only; it changes no application logic.
+   ------------------------------------------------------------- */
+html, body, .stApp { color-scheme: light !important; }
+[data-testid="stAppViewContainer"] {
+  background: #f5f8fb !important;
+  color: #15364b !important;
+}
+[data-testid="stHeader"] { background: #f5f8fb !important; }
+/* All standard page headings must be readable on the light canvas. */
+[data-testid="stAppViewContainer"] [data-testid="stMarkdownContainer"] :is(h1, h2, h3, h4, h5, h6),
+[data-testid="stAppViewContainer"] [data-testid="stHeadingWithActionElements"] :is(h1, h2, h3, h4, h5, h6) {
+  color: #102e46 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+  font-weight: 750 !important;
+}
+/* Retain intentionally white text on the dark graphical banners. */
+[data-testid="stAppViewContainer"] [data-testid="stMarkdownContainer"] .hero h1,
+[data-testid="stAppViewContainer"] [data-testid="stMarkdownContainer"] .animated-road h3 {
+  color: #ffffff !important;
+}
+[data-testid="stAppViewContainer"] [data-testid="stMarkdownContainer"] .hero p {
+  color: #dcefed !important;
+}
+[data-testid="stAppViewContainer"] [data-testid="stMarkdownContainer"] .animated-road p {
+  color: #def4f0 !important;
+}
+/* Standard descriptions and captions, on white and light grey. */
+[data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"],
+[data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"] p,
+[data-testid="stAppViewContainer"] [data-testid="stWidgetLabel"] p,
+[data-testid="stAppViewContainer"] [data-testid="stWidgetLabel"] label {
+  color: #496276 !important;
+  opacity: 1 !important;
+}
+/* Clickable items: readable text, clear borders and visible focus. */
+[data-testid="stAppViewContainer"] .stButton > button[kind="primary"],
+[data-testid="stAppViewContainer"] [data-testid="stFormSubmitButton"] button[kind="primary"],
+[data-testid="stAppViewContainer"] button[data-testid="stBaseButton-primary"] {
+  background: #006e62 !important;
+  color: #ffffff !important;
+  border: 1px solid #006e62 !important;
+  box-shadow: 0 4px 12px rgba(0, 92, 80, .14) !important;
+}
+[data-testid="stAppViewContainer"] .stButton > button[kind="primary"]:hover,
+[data-testid="stAppViewContainer"] [data-testid="stFormSubmitButton"] button[kind="primary"]:hover,
+[data-testid="stAppViewContainer"] button[data-testid="stBaseButton-primary"]:hover {
+  background: #00564c !important;
+  border-color: #00564c !important;
+}
+[data-testid="stAppViewContainer"] .stButton > button[kind="secondary"],
+[data-testid="stAppViewContainer"] [data-testid="stFormSubmitButton"] button[kind="secondary"],
+[data-testid="stAppViewContainer"] button[data-testid="stBaseButton-secondary"] {
+  background: #ffffff !important;
+  color: #163c50 !important;
+  border: 1px solid #b3c9d2 !important;
+  box-shadow: 0 2px 8px rgba(12, 46, 63, .04) !important;
+}
+[data-testid="stAppViewContainer"] .stButton > button[kind="secondary"]:hover,
+[data-testid="stAppViewContainer"] [data-testid="stFormSubmitButton"] button[kind="secondary"]:hover,
+[data-testid="stAppViewContainer"] button[data-testid="stBaseButton-secondary"]:hover {
+  background: #e8f6f2 !important;
+  border-color: #08796f !important;
+  color: #00574f !important;
+}
+[data-testid="stAppViewContainer"] button:focus-visible,
+[data-testid="stSidebar"] button:focus-visible,
+[data-testid="stAppViewContainer"] input:focus-visible,
+[data-testid="stAppViewContainer"] a:focus-visible {
+  outline: 3px solid #e6a934 !important;
+  outline-offset: 2px !important;
+}
+[data-testid="stAppViewContainer"] button:disabled {
+  opacity: .66 !important;
+  cursor: not-allowed !important;
+}
+/* Data entry controls & tabs must not inherit white-on-white text. */
+[data-testid="stAppViewContainer"] [data-testid="stTextInput"] input,
+[data-testid="stAppViewContainer"] [data-testid="stNumberInput"] input,
+[data-testid="stAppViewContainer"] [data-testid="stDateInput"] input,
+[data-testid="stAppViewContainer"] textarea,
+[data-testid="stAppViewContainer"] [data-baseweb="select"] [role="combobox"] {
+  color: #16384a !important;
+  background-color: #ffffff !important;
+}
+[data-testid="stAppViewContainer"] [data-baseweb="tab"] {
+  color: #3c576a !important;
+}
+[data-testid="stAppViewContainer"] [data-baseweb="tab"][aria-selected="true"] {
+  color: #006e62 !important;
+  font-weight: 800 !important;
+}
+/* Sidebar keeps the navy palette; increase selection & icon contrast. */
+section[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {
+  background: #126968 !important;
+  box-shadow: inset 3px 0 0 #6af0d3 !important;
+}
+section[data-testid="stSidebar"] [role="radiogroup"] label:not(:has(input:checked)):hover {
+  background: rgba(255,255,255,.13) !important;
+}
+section[data-testid="stSidebar"] [role="radiogroup"] input[type="radio"] {
+  accent-color: #58e6c5 !important;
+}
+section[data-testid="stSidebar"] [data-testid="stButton"] button {
+  background: rgba(255,255,255,.09) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,.32) !important;
+}
+section[data-testid="stSidebar"] [data-testid="stButton"] button:hover {
+  background: rgba(255,255,255,.17) !important;
+}
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"],
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {
+  color: #bed9e2 !important;
+}
+[data-testid="stAppViewContainer"] [data-testid="stMetricLabel"] {
+  color: #4f6677 !important;
+}
+[data-testid="stAppViewContainer"] [data-testid="stMetricValue"] {
+  color: #102e46 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-testid="stAppViewContainer"] *,
+  [data-testid="stSidebar"] * { animation:none !important; transition:none !important; }
+}
+
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
