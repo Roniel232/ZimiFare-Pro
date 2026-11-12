@@ -29,6 +29,7 @@ from zimifare.core import (
 )
 from zimifare.identifiers import user_ref, ride_ref, transaction_ref, parse_transaction_ref
 from zimifare.analytics import filter_transactions, summarise_transactions
+from zimifare.postgres_store import get_zimifare_store
 
 ROOT = Path(__file__).resolve().parent
 ICON_B64 = base64.b64encode((ROOT / "assets" / "icon.png").read_bytes()).decode("ascii")
@@ -263,7 +264,15 @@ st.markdown(CSS, unsafe_allow_html=True)
 
 @st.cache_resource(show_spinner=False)
 def get_store() -> ZimiFareStore:
-    return ZimiFareStore()
+    # Root-level Streamlit Cloud secrets normally become environment variables.
+    # Reading st.secrets as a fallback also supports local secrets.toml files.
+    url = os.environ.get("DATABASE_URL", "")
+    if not url:
+        try:
+            url = str(st.secrets.get("DATABASE_URL", ""))
+        except Exception:
+            url = ""
+    return get_zimifare_store(url)
 
 
 def setup_secret() -> str:
@@ -918,6 +927,10 @@ def ride_table_admin(rows: list[dict]) -> None:
 
 def admin_overview(store: ZimiFareStore, user: dict) -> None:
     main_header(user, "Administration overview", "A clear view of users, fare activity and transactions needing review.")
+    if getattr(store, "backend_name", ""):
+        st.caption("☁️ Persistent database connected · PostgreSQL · Shared across devices")
+    else:
+        st.warning("Temporary SQLite storage is active. For reliable shared data, configure DATABASE_URL in Streamlit secrets.")
     totals = store.system_totals(user["user_id"])
     a,b,c,d = st.columns(4)
     a.metric("Registered users", totals["users"])
