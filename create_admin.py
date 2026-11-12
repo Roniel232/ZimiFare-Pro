@@ -1,11 +1,12 @@
 """Trusted local bootstrap of the first ZimiFare administrator."""
 from getpass import getpass
-from zimifare.core import ZimiFareError, ZimiFareStore
+from zimifare.core import ZimiFareError
+from zimifare.postgres_store import get_zimifare_store
 from zimifare.identifiers import user_ref
 
 
 def main() -> None:
-    store = ZimiFareStore()
+    store = get_zimifare_store()
     if store.has_admin():
         print("An administrator already exists. Sign in through the ZimiFare app.")
         return
