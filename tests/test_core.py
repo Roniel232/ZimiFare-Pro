@@ -1,4 +1,4 @@
-"""Regression tests for the payment, account, and fraud rules in the pseudocode.
+"""Regression tests for the payment, account, and fraud rules 
 
 Run: python -m unittest discover -s tests -v
 """
