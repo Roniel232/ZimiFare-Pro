@@ -1,7 +1,4 @@
-"""Stable, presentation-safe public references for internal SQLite integer IDs.
-
-IDs are NOT renumbered or migrated. A role-specific prefix makes old records
-and new ones easy to identify without breaking existing foreign keys.
+""" public references for internal SQLite integer IDs..
 """
 from __future__ import annotations
 
