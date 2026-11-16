@@ -137,17 +137,24 @@ class ZimiFareStore:
             conn.close()
 
     def delete_ride(self, driver_id: int, ride_id: int) -> None:
-    """Allow a driver to delete one of their own UNPAID rides."""
-    driver = self.current_user(driver_id)
-    if not driver or driver["role"] != "DRIVER" or driver["status"] != "ACTIVE":
-        raise AccessDenied("Only an active driver can delete rides.")
-
-    ride = next((r for r in self.list_rides(driver_id) if r["ride_id"] == ride_id), None)
-    if ride is None:
-        raise AccessDenied("You can only delete rides assigned to your own driver account.")
-    if ride["payment_status"] != "UNPAID":
-        raise ZimiFareError("Paid rides cannot be deleted because they are linked to transactions.")
-    
+        """Let a driver delete one of their own UNPAID rides (atomic, under the write lock)."""
+        with self._write() as conn:
+            self._require_active(conn, driver_id, "DRIVER")
+            ride = conn.execute(
+                "SELECT driver_id, payment_status, transaction_id FROM rides WHERE ride_id=?",
+                (ride_id,),
+            ).fetchone()
+            if not ride:
+                raise ZimiFareError("That ride no longer exists.")
+            if ride["driver_id"] != driver_id:
+                raise AccessDenied("You can only delete rides assigned to your own driver account.")
+            if ride["payment_status"] != "UNPAID" or ride["transaction_id"] is not None:
+                raise ZimiFareError("Paid rides cannot be deleted because they are linked to transactions.")
+            conn.execute(
+                "DELETE FROM rides WHERE ride_id=? AND driver_id=? AND payment_status='UNPAID'",
+                (ride_id, driver_id),
+            )
+            
     def init_db(self) -> None:
         conn = self._connect()
         try:
