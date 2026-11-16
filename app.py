@@ -1,4 +1,4 @@
-"""ZimiFare — professional Streamlit interface for the integrated fare prototype."""
+"""ZimiFare — passenger, driver and administrator fare-management platform."""
 
 from __future__ import annotations
 
@@ -257,6 +257,36 @@ section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {
   [data-testid="stSidebar"] * { animation:none !important; transition:none !important; }
 }
 
+
+/* Accessible, unmistakable sign-out action in the dark sidebar. */
+section[data-testid="stSidebar"] [class*="st-key-zf_logout"] button,
+section[data-testid="stSidebar"] [class*="st-key-zf_logout"] button[kind="primary"],
+section[data-testid="stSidebar"] [class*="st-key-zf_logout"] button[data-testid="stBaseButton-primary"] {
+  background: #007b70 !important;
+  border: 2px solid #82f4da !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .28) !important;
+  min-height: 3.25rem !important;
+  opacity: 1 !important;
+}
+section[data-testid="stSidebar"] [class*="st-key-zf_logout"] button *,
+section[data-testid="stSidebar"] [class*="st-key-zf_logout"] button p,
+section[data-testid="stSidebar"] [class*="st-key-zf_logout"] button span {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  font-weight: 800 !important;
+  font-size: 1rem !important;
+}
+section[data-testid="stSidebar"] [class*="st-key-zf_logout"] button:hover {
+  background: #005d54 !important;
+  border-color: #ffffff !important;
+}
+/* Fallback for Streamlit versions without key-scoped wrapper classes. */
+section[data-testid="stSidebar"] [data-testid="stButton"] button p,
+section[data-testid="stSidebar"] [data-testid="stButton"] button span {
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -431,11 +461,11 @@ def sidebar(user: dict) -> str:
         "WORKSPACE", options, format_func=lambda x: f"{icons[x]}    {x}", key="nav"
     )
     st.sidebar.divider()
-    st.sidebar.button("↪  Sign out", use_container_width=True, on_click=sign_out)
+    st.sidebar.button("⎋  Log out securely", key="zf_logout", type="primary", use_container_width=True, on_click=sign_out)
     st.sidebar.markdown(
         '<p style="font-size:.73rem;color:#9cb9c5;margin-top:48px;line-height:1.7">'
-        'ZIMIFARE · ACADEMIC PROTOTYPE<br/>'
-        'Top-ups are simulations. No actual payments are processed.</p>',
+        'ZIMIFARE · SMART FARE MANAGEMENT<br/>'
+        'Fare-card credits are virtual; no funds are transferred.</p>',
         unsafe_allow_html=True
     )
     return value
@@ -493,7 +523,7 @@ def public_page(store: ZimiFareStore) -> None:
         )
         st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
         travel_illustration()
-        st.caption("Academic prototype • Currency: Jamaican dollars (JMD) • No real funds collected")
+        st.caption("ZimiFare fare management · Jamaican dollars (JMD) · Virtual fare-card credits")
     with right:
         with st.container(border=True):
             st.markdown("### Your ZimiFare account")
@@ -586,17 +616,17 @@ def passenger_overview(store: ZimiFareStore, user: dict) -> None:
 
 
 def passenger_topup(store: ZimiFareStore, user: dict) -> None:
-    main_header(user, "Top up your fare card", "Add simulated funds to your ZimiFare balance and receive a transaction reference.")
+    main_header(user, "Top up your fare card", "Add virtual credits to your fare card and receive a transaction reference.")
     a,b = st.columns([1.4,1], gap="large")
     with a:
         with st.form("topup_form"):
             st.markdown("### Add funds")
             amount = st.text_input("Amount (JMD)", value="1000.00", help="Positive amount, with up to two decimal places.")
-            agreed = st.checkbox("I understand this is a simulated top-up, not a real bank payment.")
-            submit = st.form_submit_button("Confirm simulated top-up", type="primary", use_container_width=True)
+            agreed = st.checkbox("I understand this adds virtual credits only; no real money is transferred.")
+            submit = st.form_submit_button("Add fare-card credits", type="primary", use_container_width=True)
         if submit:
             if not agreed:
-                st.error("Please confirm that you understand the top-up is simulated.")
+                st.error("Please confirm that this is a virtual-credit top-up.")
             else:
                 try:
                     tx, balance = store.top_up(user["user_id"], cents_from_input(amount))
@@ -606,7 +636,7 @@ def passenger_topup(store: ZimiFareStore, user: dict) -> None:
                     friendly_error(exc)
     with b:
         st.metric("Available balance", money(user["balance_cents"]))
-        st.info("For this academic demonstration, top-ups are treated as confirmed **without a bank connection or actual transfer**.")
+        st.info("**Virtual fare-card credits:** Your balance updates immediately within ZimiFare. This feature does not connect to a bank or transfer real money.")
     section("Your recent transactions")
     transactions_table(store.passenger_transactions(user["user_id"])[:8], admin=False)
 
@@ -705,7 +735,7 @@ def driver_receive(store: ZimiFareStore, user: dict) -> None:
                         st.success(f"Fare request {ride_ref(ride_id)} created. The passenger can now pay with their fare card, or you can confirm cash using the Receive cash tab.")
                     except Exception as exc:
                         friendly_error(exc)
-        st.caption(f"This prototype allows up to {MAX_RIDES} ride records, as specified in the pseudocode.")
+        st.caption(f"Current ride capacity: {MAX_RIDES} records. Contact your administrator if the limit is reached.")
     with cash_tab:
         unpaid = [r for r in store.list_rides(user["user_id"]) if r["payment_status"] == "UNPAID"]
         if not unpaid:
@@ -841,7 +871,7 @@ def analytics_charts(rows: list[dict], *, compact: bool = False) -> None:
 def admin_analytics(store: ZimiFareStore, user: dict) -> None:
     main_header(user, "Analytics & reports", "Live financial insights, interactive filters and downloadable operational records.")
     transactions = store.list_transactions(user["user_id"])
-    st.markdown('<span class="report-tag">LIVE DATA · NO SAMPLE TRANSACTIONS</span>', unsafe_allow_html=True)
+    st.markdown('<span class="report-tag">TRANSACTION ACTIVITY · RECORDED DATA</span>', unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("#### Explore recorded activity")
         c1, c2, c3 = st.columns(3)
@@ -961,7 +991,7 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
         "Phone":u["phone_num"], "Role":u["role"], "Status":u["status"],
         "Fare card": money(u["balance_cents"]) if u["role"] == "PASSENGER" else "—"
     } for u in users], hide_index=True, use_container_width=True)
-    edit_tab,status_tab,create_admin_tab = st.tabs(["Update account", "Disable / block account", "Create administrator"])
+    edit_tab,status_tab,create_admin_tab = st.tabs(["Update account", "Account access", "Create administrator"])
     with edit_tab:
         with st.form("admin_update_user"):
             target = st.selectbox("Select user", users, format_func=lambda u: f"{user_ref(u['user_id'],u['role'])} · {u['full_name']} · {u['role']}")
@@ -982,20 +1012,37 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
         else:
             with st.form("admin_status_change"):
                 target = st.selectbox("Passenger / driver", eligible, format_func=lambda u: f"{user_ref(u['user_id'],u['role'])} · {u['full_name']} · {u['status']}")
-                status = st.radio("New status", ["DISABLED", "BLOCKED"], horizontal=True)
-                confirmed = st.checkbox("I confirm this access restriction and understand ride and payment history remains intact.")
-                submitted = st.form_submit_button("Apply account restriction", type="primary")
+                current_status = target["status"]
+                st.caption(f"Current access status: {current_status.title()}")
+                available_statuses = ["ACTIVE", "DISABLED", "BLOCKED"]
+                # Existing blocked accounts may be restored directly to ACTIVE,
+                # but a block must not be reduced to DISABLED.
+                if current_status == "BLOCKED":
+                    available_statuses.remove("DISABLED")
+                available_statuses = [s for s in available_statuses if s != current_status]
+                status = st.radio(
+                    "Change access to", available_statuses,
+                    format_func=lambda s: {
+                        "ACTIVE": "Reactivate — allow sign-in",
+                        "DISABLED": "Disable — suspend sign-in",
+                        "BLOCKED": "Block — deny sign-in",
+                    }[s],
+                )
+                confirmed = st.checkbox(
+                    "I confirm this access change. Existing balances, rides and transaction history will be retained."
+                )
+                submitted = st.form_submit_button("Save access status", type="primary")
             if submitted:
                 if not confirmed:
-                    st.error("Confirm the access restriction to continue.")
+                    st.error("Confirm the account status change to continue.")
                 else:
                     try:
                         store.set_user_status(user["user_id"], target["user_id"], status)
-                        flash(f"Account {user_ref(target['user_id'], target['role'])} status changed to {status}.")
+                        flash(f"Account {user_ref(target['user_id'], target['role'])} is now {status.lower()}.")
                         st.rerun()
                     except Exception as exc:
                         friendly_error(exc)
-        st.caption("As defined in the pseudocode, blocking cannot be downgraded to disabling; reactivation is not included in this prototype.")
+        st.caption("Blocked or disabled users cannot sign in. An administrator can restore access by choosing Reactivate. A blocked account cannot be changed directly to Disabled.")
 
     with create_admin_tab:
         st.info("Only an active administrator can create another administrator. "
