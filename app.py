@@ -702,7 +702,7 @@ def driver_overview(store: ZimiFareStore, user: dict) -> None:
 
 def driver_receive(store: ZimiFareStore, user: dict) -> None:
     main_header(user, "Receive a fare", "Create a fare request or confirm cash received for an existing ride.")
-    create_tab, cash_tab = st.tabs(["Create fare request", "Receive cash"])
+    create_tab, cash_tab, delete_tab = st.tabs(["Create fare request", "Receive cash", "Delete ride"])
     with create_tab:
         passengers = store.passengers(user["user_id"])
         if not passengers:
