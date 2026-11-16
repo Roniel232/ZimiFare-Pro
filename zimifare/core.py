@@ -136,6 +136,18 @@ class ZimiFareStore:
         finally:
             conn.close()
 
+    def delete_ride(self, driver_id: int, ride_id: int) -> None:
+    """Allow a driver to delete one of their own UNPAID rides."""
+    driver = self.current_user(driver_id)
+    if not driver or driver["role"] != "DRIVER" or driver["status"] != "ACTIVE":
+        raise AccessDenied("Only an active driver can delete rides.")
+
+    ride = next((r for r in self.list_rides(driver_id) if r["ride_id"] == ride_id), None)
+    if ride is None:
+        raise AccessDenied("You can only delete rides assigned to your own driver account.")
+    if ride["payment_status"] != "UNPAID":
+        raise ZimiFareError("Paid rides cannot be deleted because they are linked to transactions.")
+    
     def init_db(self) -> None:
         conn = self._connect()
         try:
