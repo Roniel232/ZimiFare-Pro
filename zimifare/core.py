@@ -346,7 +346,7 @@ class ZimiFareStore:
             self._require_active(conn, driver_id, "DRIVER")
             self._require_active(conn, passenger_id, "PASSENGER")
             if conn.execute("SELECT COUNT(*) FROM rides").fetchone()[0] >= MAX_RIDES:
-                raise ZimiFareError("Ride storage is full (100 rides in this prototype).")
+                raise ZimiFareError("Ride capacity has been reached (maximum 100 rides).")
             cur = conn.execute(
                 "INSERT INTO rides(passenger_id,driver_id,ride_date,pickup,destination,fare_cents) VALUES(?,?,?,?,?,?)",
                 (passenger_id, driver_id, ride_date, pickup, destination, fare_cents),
@@ -484,8 +484,8 @@ class ZimiFareStore:
             )
 
     def set_user_status(self, admin_id: int, target_id: int, new_status: str) -> None:
-        if new_status not in ("BLOCKED", "DISABLED"):
-            raise ZimiFareError("Only BLOCKED and DISABLED status changes are supported.")
+        if new_status not in ("ACTIVE", "BLOCKED", "DISABLED"):
+            raise ZimiFareError("Select ACTIVE, BLOCKED or DISABLED as the account status.")
         with self._write() as conn:
             self._require_active(conn, admin_id, "ADMIN")
             row = conn.execute("SELECT * FROM users WHERE user_id=?", (target_id,)).fetchone()
