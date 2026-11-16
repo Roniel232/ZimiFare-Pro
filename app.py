@@ -762,6 +762,33 @@ def driver_receive(store: ZimiFareStore, user: dict) -> None:
                         friendly_error(exc)
         st.caption("Cash is recorded by the assigned driver only. Fare-card payment is completed by the passenger.")
 
+    with delete_tab:
+        deletable = [r for r in store.list_rides(user["user_id"]) if r["payment_status"] == "UNPAID"]
+        if not deletable:
+            empty("You have no unpaid rides to delete.")
+        else:
+            with st.form("delete_ride_form"):
+                selected = st.selectbox(
+                    "Select an unpaid ride to delete", deletable,
+                    format_func=lambda r: f"{ride_ref(r['ride_id'])}  •  {r['passenger_name']}  •  {r['pickup']} → {r['destination']}  •  {money(r['fare_cents'])}"
+                )
+                st.write(f"**Ride date:** {selected['ride_date']}")
+                st.write(f"**Agreed fare:** {money(selected['fare_cents'])}")
+                confirm_delete = st.checkbox(
+                    "I understand this permanently deletes the ride and it cannot be undone."
+                )
+                delete = st.form_submit_button("Delete selected ride", type="primary", use_container_width=True)
+            if delete:
+                if not confirm_delete:
+                    st.error("Please confirm the deletion before continuing.")
+                else:
+                    try:
+                        store.delete_ride(user["user_id"], selected["ride_id"])
+                        flash(f"Ride {ride_ref(selected['ride_id'])} has been deleted.")
+                        st.rerun()
+                    except Exception as exc:
+                        friendly_error(exc)
+        st.caption("Only unpaid rides you created can be deleted. Paid rides are kept because they are linked to transaction records and earnings.")
 
 def driver_earnings(store: ZimiFareStore, user: dict) -> None:
     main_header(user, "My earnings", "Earnings come from successfully paid rides only, including card and cash payments.")
