@@ -514,6 +514,8 @@ def admin_setup(store: ZimiFareStore) -> None:
             st.error("The setup key is incorrect.")
         elif pw != check:
             st.error("Passwords do not match.")
+        elif not phone_is_valid(phone):
+            pass  # phone_is_valid has already shown the error
         else:
             try:
                 account = store.bootstrap_admin(full_name, email, phone, pw, trusted_setup=True)
@@ -565,7 +567,7 @@ def public_page(store: ZimiFareStore) -> None:
                 with st.form("register_form"):
                     name = st.text_input("Full name", placeholder="Your full name")
                     em = st.text_input("Email address", placeholder="you@example.com")
-                    phone = st.text_input("Phone number")
+                    phone = st.text_input("Phone number", help="Maximum 10 digits.")
                     role = st.selectbox("Register as", ["PASSENGER", "DRIVER"], format_func=str.title)
                     password = st.text_input("Create password (8+ characters)", type="password")
                     password_2 = st.text_input("Confirm password", type="password")
@@ -573,6 +575,8 @@ def public_page(store: ZimiFareStore) -> None:
                 if submit_registration:
                     if password != password_2:
                         st.error("Passwords do not match.")
+                    elif not phone_is_valid(phone):
+                        pass  # phone_is_valid has already shown the error
                     else:
                         try:
                             uid = store.register(name, em, phone, password, role)
@@ -591,17 +595,18 @@ def profile_page(store: ZimiFareStore, user: dict) -> None:
             st.caption("Leave a field blank to keep the existing information.")
             st.text_input("Email address (cannot be changed)", value=user["email"], disabled=True)
             name = st.text_input("New full name", placeholder=user["full_name"])
-            phone = st.text_input("New phone number", placeholder=user["phone_num"])
+            phone = st.text_input("New phone number (max 10 digits)", placeholder=user["phone_num"])
             current_pw = st.text_input("Current password (only for password changes)", type="password")
             new_pw = st.text_input("New password (optional)", type="password")
             submit = st.form_submit_button("Save profile changes", type="primary")
         if submit:
-            try:
-                store.update_profile(user["user_id"], name, phone, new_pw, current_pw)
-                flash("Your profile has been updated successfully.")
-                st.rerun()
-            except Exception as exc:
-                friendly_error(exc)
+            if phone_is_valid(phone, required=False):
+                try:
+                    store.update_profile(user["user_id"], name, phone, new_pw, current_pw)
+                    flash("Your profile has been updated successfully.")
+                    st.rerun()
+                except Exception as exc:
+                    friendly_error(exc)
     with b:
         st.markdown("### Account information")
         with st.container(border=True):
