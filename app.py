@@ -1058,7 +1058,8 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
                     st.rerun()
                 except Exception as exc:
                     friendly_error(exc)
-      with status_tab:
+      
+    with status_tab:
         eligible = [u for u in users if u["role"] != "ADMIN"]
         if not eligible:
             empty("There are no passenger or driver accounts to restrict.")
