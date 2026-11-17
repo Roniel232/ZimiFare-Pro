@@ -321,6 +321,25 @@ def friendly_error(exc: Exception) -> None:
     else:
         st.error("Something unexpected happened. Please try again or contact your project administrator.")
 
+PHONE_MAX_DIGITS = 10
+
+def phone_is_valid(raw: str, *, required: bool = True) -> bool:
+    """Show an error and return False if the phone number is invalid.
+    Spaces, dashes, dots and brackets are ignored when counting digits."""
+    raw = (raw or "").strip()
+    if not raw:
+        if required:
+            st.error("Please enter a phone number.")
+            return False
+        return True
+    cleaned = raw.translate(str.maketrans("", "", " -.()"))
+    if not cleaned.isdigit():
+        st.error("Phone number may contain digits only (spaces, dashes and brackets are allowed).")
+        return False
+    if len(cleaned) > PHONE_MAX_DIGITS:
+        st.error(f"Phone number cannot be more than {PHONE_MAX_DIGITS} digits.")
+        return False
+    return True
 
 def flash(message: str) -> None:
     st.session_state["flash"] = message
