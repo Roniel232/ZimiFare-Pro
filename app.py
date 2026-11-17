@@ -1095,9 +1095,9 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
                         st.rerun()
                     except Exception as exc:
                         friendly_error(exc)
-        st.caption("Blocked or disabled users cannot sign in. An administrator can restore access by choosing Reactivate. A blocked account cannot be changed directly to Disabled.")
+           st.caption("Blocked or disabled users cannot sign in. An administrator can restore access by choosing Reactivate. A blocked account cannot be changed directly to Disabled.")
 
-   with create_admin_tab:
+    with create_admin_tab:
         st.info("Only an active administrator can create another administrator. "
                 "For security, you must re-enter your own password to approve this action.")
         with st.form("create_additional_admin", clear_on_submit=True):
