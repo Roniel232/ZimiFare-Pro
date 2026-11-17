@@ -1043,19 +1043,20 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
         "Fare card": money(u["balance_cents"]) if u["role"] == "PASSENGER" else "—"
     } for u in users], hide_index=True, use_container_width=True)
     edit_tab,status_tab,create_admin_tab = st.tabs(["Update account", "Account access", "Create administrator"])
-    with edit_tab:
+       with edit_tab:
         with st.form("admin_update_user"):
             target = st.selectbox("Select user", users, format_func=lambda u: f"{user_ref(u['user_id'],u['role'])} · {u['full_name']} · {u['role']}")
             name = st.text_input("New full name (optional)")
-            phone = st.text_input("New phone number (optional)")
+            phone = st.text_input("New phone number (optional, max 10 digits)")
             submitted = st.form_submit_button("Save user changes", type="primary")
         if submitted:
-            try:
-                store.admin_edit_user(user["user_id"], target["user_id"], name, phone)
-                flash(f"Account {user_ref(target['user_id'], target['role'])} updated.")
-                st.rerun()
-            except Exception as exc:
-                friendly_error(exc)
+            if phone_is_valid(phone, required=False):
+                try:
+                    store.admin_edit_user(user["user_id"], target["user_id"], name, phone)
+                    flash(f"Account {user_ref(target['user_id'], target['role'])} updated.")
+                    st.rerun()
+                except Exception as exc:
+                    friendly_error(exc)
     with status_tab:
         eligible = [u for u in users if u["role"] != "ADMIN"]
         if not eligible:
@@ -1095,13 +1096,13 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
                         friendly_error(exc)
         st.caption("Blocked or disabled users cannot sign in. An administrator can restore access by choosing Reactivate. A blocked account cannot be changed directly to Disabled.")
 
-    with create_admin_tab:
+   with create_admin_tab:
         st.info("Only an active administrator can create another administrator. "
                 "For security, you must re-enter your own password to approve this action.")
         with st.form("create_additional_admin", clear_on_submit=True):
             admin_name = st.text_input("New administrator's full name")
             admin_email = st.text_input("New administrator's email address")
-            admin_phone = st.text_input("New administrator's phone number")
+            admin_phone = st.text_input("New administrator's phone number (max 10 digits)")
             admin_password = st.text_input("Set new administrator password (at least 8 characters)", type="password")
             admin_confirm_password = st.text_input("Confirm new administrator password", type="password")
             authorising_password = st.text_input("Your current administrator password", type="password")
@@ -1112,6 +1113,8 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
                 st.error("Confirm the administrator access grant before continuing.")
             elif admin_password != admin_confirm_password:
                 st.error("The new administrator passwords do not match.")
+            elif not phone_is_valid(admin_phone):
+                pass  # phone_is_valid has already shown the error
             else:
                 try:
                     new_id = store.create_administrator(
@@ -1123,7 +1126,6 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
                     st.rerun()
                 except Exception as exc:
                     friendly_error(exc)
-
 
 def admin_transactions(store: ZimiFareStore, user: dict) -> None:
     main_header(user, "Transaction monitor", "Inspect successful top-ups and fare settlements from the shared transaction log.")
