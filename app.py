@@ -1058,21 +1058,27 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
                     st.rerun()
                 except Exception as exc:
                     friendly_error(exc)
-    with status_tab:
+      with status_tab:
         eligible = [u for u in users if u["role"] != "ADMIN"]
         if not eligible:
             empty("There are no passenger or driver accounts to restrict.")
         else:
-            with st.form("admin_status_change"):
-                target = st.selectbox("Passenger / driver", eligible, format_func=lambda u: f"{user_ref(u['user_id'],u['role'])} · {u['full_name']} · {u['status']}")
-                current_status = target["status"]
-                st.caption(f"Current access status: {current_status.title()}")
-                available_statuses = ["ACTIVE", "DISABLED", "BLOCKED"]
-                # Existing blocked accounts may be restored directly to ACTIVE,
-                # but a block must not be reduced to DISABLED.
-                if current_status == "BLOCKED":
-                    available_statuses.remove("DISABLED")
-                available_statuses = [s for s in available_statuses if s != current_status]
+            # Selector lives OUTSIDE the form so the options below refresh immediately.
+            target = st.selectbox(
+                "Passenger / driver", eligible, key="status_target",
+                format_func=lambda u: f"{user_ref(u['user_id'],u['role'])} · {u['full_name']} · {u['status']}",
+            )
+            current_status = target["status"]
+            st.caption(f"Current access status: {current_status.title()}")
+
+            available_statuses = ["ACTIVE", "DISABLED", "BLOCKED"]
+            # A blocked account may be restored to ACTIVE, but not reduced to DISABLED.
+            if current_status == "BLOCKED":
+                available_statuses.remove("DISABLED")
+            available_statuses = [s for s in available_statuses if s != current_status]
+
+            # Form key includes the user id so the checkbox resets when you switch users.
+            with st.form(f"admin_status_change_{target['user_id']}"):
                 status = st.radio(
                     "Change access to", available_statuses,
                     format_func=lambda s: {
@@ -1095,8 +1101,8 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
                         st.rerun()
                     except Exception as exc:
                         friendly_error(exc)
-           st.caption("Blocked or disabled users cannot sign in. An administrator can restore access by choosing Reactivate. A blocked account cannot be changed directly to Disabled.")
-
+        st.caption("Blocked or disabled users cannot sign in. An administrator can restore access by choosing Reactivate. A blocked account cannot be changed directly to Disabled.")
+          
     with create_admin_tab:
         st.info("Only an active administrator can create another administrator. "
                 "For security, you must re-enter your own password to approve this action.")
