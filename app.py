@@ -1043,7 +1043,8 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
         "Fare card": money(u["balance_cents"]) if u["role"] == "PASSENGER" else "—"
     } for u in users], hide_index=True, use_container_width=True)
     edit_tab,status_tab,create_admin_tab = st.tabs(["Update account", "Account access", "Create administrator"])
-       with edit_tab:
+       
+    with edit_tab:
         with st.form("admin_update_user"):
             target = st.selectbox("Select user", users, format_func=lambda u: f"{user_ref(u['user_id'],u['role'])} · {u['full_name']} · {u['role']}")
             name = st.text_input("New full name (optional)")
