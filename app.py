@@ -321,7 +321,9 @@ def friendly_error(exc: Exception) -> None:
     else:
         st.error("Something unexpected happened. Please try again or contact your project administrator.")
 
+
 PHONE_MAX_DIGITS = 10
+
 
 def phone_is_valid(raw: str, *, required: bool = True) -> bool:
     """Show an error and return False if the phone number is invalid.
@@ -340,6 +342,7 @@ def phone_is_valid(raw: str, *, required: bool = True) -> bool:
         st.error(f"Phone number cannot be more than {PHONE_MAX_DIGITS} digits.")
         return False
     return True
+
 
 def flash(message: str) -> None:
     st.session_state["flash"] = message
@@ -400,6 +403,7 @@ def main_header(user: dict, heading: str, description: str) -> None:
         f'<p>{html.escape(description)}</p></div>' + moving_car() + '</div>',
         unsafe_allow_html=True,
     )
+
 
 def section(title: str, description: str = "") -> None:
     st.markdown(f"### {title}")
@@ -504,7 +508,7 @@ def admin_setup(store: ZimiFareStore) -> None:
     with st.form("admin_setup_form"):
         full_name = st.text_input("Administrator full name")
         email = st.text_input("Administrator email")
-        phone = st.text_input("Phone number")
+        phone = st.text_input("Phone number (max 10 digits)")
         pw = st.text_input("New password (8+ characters)", type="password")
         check = st.text_input("Confirm password", type="password")
         entered_key = st.text_input("One-time setup key", type="password")
@@ -814,6 +818,7 @@ def driver_receive(store: ZimiFareStore, user: dict) -> None:
                         friendly_error(exc)
         st.caption("Only unpaid rides you created can be deleted. Paid rides are kept because they are linked to transaction records and earnings.")
 
+
 def driver_earnings(store: ZimiFareStore, user: dict) -> None:
     main_header(user, "My earnings", "Earnings come from successfully paid rides only, including card and cash payments.")
     report = store.driver_earnings(user["user_id"])
@@ -1042,8 +1047,9 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
         "Phone":u["phone_num"], "Role":u["role"], "Status":u["status"],
         "Fare card": money(u["balance_cents"]) if u["role"] == "PASSENGER" else "—"
     } for u in users], hide_index=True, use_container_width=True)
-    edit_tab,status_tab,create_admin_tab = st.tabs(["Update account", "Account access", "Create administrator"])
-       
+    edit_tab, status_tab, create_admin_tab = st.tabs(["Update account", "Account access", "Create administrator"])
+
+    # ---------- Update account (phone limit applied) ----------
     with edit_tab:
         with st.form("admin_update_user"):
             target = st.selectbox("Select user", users, format_func=lambda u: f"{user_ref(u['user_id'],u['role'])} · {u['full_name']} · {u['role']}")
@@ -1058,7 +1064,8 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
                     st.rerun()
                 except Exception as exc:
                     friendly_error(exc)
-      
+
+    # ---------- Account access (unblock / re-enable fix) ----------
     with status_tab:
         eligible = [u for u in users if u["role"] != "ADMIN"]
         if not eligible:
@@ -1103,7 +1110,8 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
                     except Exception as exc:
                         friendly_error(exc)
         st.caption("Blocked or disabled users cannot sign in. An administrator can restore access by choosing Reactivate. A blocked account cannot be changed directly to Disabled.")
-          
+
+    # ---------- Create administrator (phone limit applied) ----------
     with create_admin_tab:
         st.info("Only an active administrator can create another administrator. "
                 "For security, you must re-enter your own password to approve this action.")
@@ -1134,6 +1142,7 @@ def admin_users(store: ZimiFareStore, user: dict) -> None:
                     st.rerun()
                 except Exception as exc:
                     friendly_error(exc)
+
 
 def admin_transactions(store: ZimiFareStore, user: dict) -> None:
     main_header(user, "Transaction monitor", "Inspect successful top-ups and fare settlements from the shared transaction log.")
